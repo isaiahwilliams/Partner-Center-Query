@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2024
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{485F4E95-8778-41E5-A429-AA47AD38F4AD}"
+	ProjectSection(SolutionItems) = preProject
+		CONTRIBUTING.md = CONTRIBUTING.md
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A9BD0FEC-A8D9-4B66-9D31-A1EED90CE750}"
+EndProject
+Project("{4DF76451-A46A-4C0B-BE03-459FAAFA07E6}") = "PartnerCenter", "src\PartnerCenter\PartnerCenter.mproj", "{846197A6-221D-4D07-87AB-CE80D4D62222}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{846197A6-221D-4D07-87AB-CE80D4D62222}.Debug|x86.ActiveCfg = Debug|x86
+		{846197A6-221D-4D07-87AB-CE80D4D62222}.Debug|x86.Build.0 = Debug|x86
+		{846197A6-221D-4D07-87AB-CE80D4D62222}.Release|x86.ActiveCfg = Release|x86
+		{846197A6-221D-4D07-87AB-CE80D4D62222}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{846197A6-221D-4D07-87AB-CE80D4D62222} = {A9BD0FEC-A8D9-4B66-9D31-A1EED90CE750}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {96168062-00B7-4192-BAEC-5767E47BB0AF}
+	EndGlobalSection
+EndGlobal
