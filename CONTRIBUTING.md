@@ -1,4 +1,4 @@
-# Contributing to Azure-SQL-OMS
+# Contributing to Partner Center Query
 
 ## <a name="issue"></a> Found an Issue?
 If you find a bug in the source code or a mistake in the documentation, you can help us by
