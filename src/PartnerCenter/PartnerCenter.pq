@@ -10,7 +10,8 @@ token_uri = "https://login.microsoftonline.com/common/oauth2/token";
 
 // Partner Center configuration settings
 
-application_name = "Partner Center M Extension 1.0";
+client_name = "Partner Center Query";
+sdk_version = "1.1";
 
 // Export available functions
 
@@ -102,7 +103,7 @@ StartLogin = (resourceUrl, state, display) =>
         [
             LoginUri = authorizeUrl,
             CallbackUri = redirect_uri,
-            WindowHeight = 720,
+            WindowHeight = 860,
             WindowWidth = 1024,
             Context = null
         ];
@@ -122,7 +123,7 @@ TokenMethod = (grantType, tokenField, code) =>
                 #"Content-type" = "application/x-www-form-urlencoded",
                 #"Accept" = "application/json"
             ],
-            ManualStatusHandling = {400} 
+            ManualStatusHandling = {400, 403, 500} 
         ]),
         body = Json.Document(tokenResponse),
         result = if (Record.HasFields(body, {"error", "error_description"})) then 
@@ -261,7 +262,8 @@ PC.ContinuationRequest = (relativePath as text, continuationToken as text) =>
                 Headers = [
                     #"Accept" = "application/json",
                     #"MS-ContinuationToken" = continuationToken,
-                    #"MS-PartnerCenter-Application" = application_name
+                    #"MS-PartnerCenter-Client" = client_name,
+                    #"MS-SdkVersion" = sdk_version
                 ], 
                 RelativePath = relativePath
             ]
@@ -307,9 +309,10 @@ PC.Request = (relativePath as text) =>
             [
                 Headers = [
                     #"Accept" = "application/json",
-                    #"MS-PartnerCenter-Application" = application_name
+                    #"MS-PartnerCenter-Client" = client_name,
+                    #"MS-SdkVersion" = sdk_version
                 ], 
-                ManualStatusHandling = {400},
+                ManualStatusHandling = {400, 403, 500},
                 RelativePath = relativePath
             ]
         ))
@@ -327,16 +330,16 @@ PC.Subscriptions = () =>
                 subscriptionsRequest = PC.Request("customers/" & customerId & "/subscriptions"),
                 items = subscriptionsRequest[items],
                 subscriptions = Table.FromList(items, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-                subscriptionsExpanded = Table.ExpandRecordColumn(subscriptions, "Column1", {"id", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId"}),
+                subscriptionsExpanded = Table.ExpandRecordColumn(subscriptions, "Column1", {"id", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}),
                 subscriptionsFiltered = Table.RemoveRowsWithErrors(subscriptionsExpanded, "{Column1"),    
                 subscriptionsRemoved  = Table.SelectRows(subscriptionsExpanded, each [subscriptionId] <> null),
                 subscriptionsAppended = Table.AddColumn(subscriptionsRemoved, "tenantId", each customerId)
             in
                 subscriptionsAppended, 
 
-        customersSubscriptions = Table.AddColumn(customers, "Custom", each GetSubscriptions([tenantId])),
+        customersSubscriptions = Table.AddColumn(customers, "Custom", each try GetSubscriptions([tenantId]) otherwise null),
         removeNoSubErrors = Table.RemoveRowsWithErrors(customersSubscriptions, {"Custom"}),
         customExpand = Table.ExpandListColumn(removeNoSubErrors, "Custom"),
-        expanded = Table.ExpandRecordColumn(customExpand, "Custom", {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId"})
+        expanded = Table.ExpandRecordColumn(customExpand, "Custom", {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"})
     in
         expanded;
