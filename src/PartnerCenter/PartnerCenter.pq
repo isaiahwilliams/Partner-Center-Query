@@ -11,7 +11,7 @@ token_uri = "https://login.microsoftonline.com/common/oauth2/token";
 // Partner Center configuration settings
 
 client_name = "Partner Center Query";
-sdk_version = "1.1";
+sdk_version = "1.2";
 
 // Export available functions
 
@@ -28,7 +28,13 @@ shared PartnerCenter.Customers = Value.ReplaceType(PC.Customers, type function (
 shared PartnerCenter.CustomersDelta = Value.ReplaceType(PC.CustomersDelta, type function () as Table.Type);
 
 [DataSource.Kind = "PartnerCenter"]
+shared PartnerCenter.Invoices = Value.ReplaceType(PC.Invoices, type function () as Table.Type);
+
+[DataSource.Kind = "PartnerCenter"]
 shared PartnerCenter.Offers = Value.ReplaceType(PC.Offers, type function () as Table.Type);
+
+[DataSource.Kind = "PartnerCenter"]
+shared PartnerCenter.Orders = Value.ReplaceType(PC.Orders, type function () as Table.Type);
 
 [DataSource.Kind = "PartnerCenter"]
 shared PartnerCenter.OrdersDelta = Value.ReplaceType(PC.OrdersDelta, type function () as Table.Type);
@@ -231,6 +237,17 @@ PC.Customers = () =>
     in
         customersInfoTable;
 
+// Partner Center Invoices
+
+PC.Invoices = () =>
+    let
+        invoices = PC.Request("invoices"),
+        items = invoices[items],
+        convertedTable = Table.FromList(items, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+        expanded = Table.ExpandRecordColumn(convertedTable, "Column1", {"id", "invoiceDate", "totalCharges", "paidAmount", "currencyCode", "currencySymbol", "pdfDownloadLink", "taxReceipts", "invoiceDetails"}, {"id", "invoiceDate", "totalCharges", "paidAmount", "currencyCode", "currencySymbol", "pdfDownloadLink", "taxReceipts", "invoiceDetails"})
+    in 
+        expanded;
+
 // Partner Center Offers
 
 PC.Offers = () =>
@@ -243,6 +260,17 @@ PC.Offers = () =>
     in 
         expandedColumn;
         
+// Partner Center Orders
+
+PC.Orders = (customerId as Text) =>
+    let 
+        orders = PC.Request("customers/" & customerId & "/orders?include_price=true"),
+        items = orders[items],
+        convertedTable = Table.FromList(items, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+        expandedColumn = Table.ExpandRecordColumn(convertedTable, "Column1", {"currencySymbol", "totalPrice", "transactionType", "id", "referenceCustomerId", "lineItems", "creationDate", "currencyCode", "status", "billingCycle"}, {"currencySymbol", "totalPrice", "transactionType", "id", "referenceCustomerId", "lineItems", "creationDate", "currencyCode", "status", "billingCycle"})
+    in 
+        expandedColumn;
+
 // Partner Center Partner Details
 
 PC.PartnerLegalProfile = () => 
@@ -331,15 +359,15 @@ PC.Subscriptions = () =>
                 items = subscriptionsRequest[items],
                 subscriptions = Table.FromList(items, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
                 subscriptionsExpanded = Table.ExpandRecordColumn(subscriptions, "Column1", {"id", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}),
-                subscriptionsFiltered = Table.RemoveRowsWithErrors(subscriptionsExpanded, "{Column1"),    
-                subscriptionsRemoved  = Table.SelectRows(subscriptionsExpanded, each [subscriptionId] <> null),
-                subscriptionsAppended = Table.AddColumn(subscriptionsRemoved, "tenantId", each customerId)
+                subscriptionsAppended = Table.AddColumn(subscriptionsExpanded, "tenantId", each customerId)
             in
                 subscriptionsAppended, 
 
         customersSubscriptions = Table.AddColumn(customers, "Custom", each try GetSubscriptions([tenantId]) otherwise null),
         removeNoSubErrors = Table.RemoveRowsWithErrors(customersSubscriptions, {"Custom"}),
         customExpand = Table.ExpandListColumn(removeNoSubErrors, "Custom"),
-        expanded = Table.ExpandRecordColumn(customExpand, "Custom", {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"})
+        expanded = Table.ExpandRecordColumn(customExpand, "Custom", {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}, {"subscriptionId", "offerId", "offerName", "friendlyName", "quantity", "unitType", "creationDate", "effectiveStartDate", "commitmentEndDate", "status", "autoRenewEnabled", "billingType", "suspensionReasons", "contractType", "orderId", "isTrial", "hasPurchasableAddons", "actions"}),
+        filtered = Table.SelectRows(expanded, each [subscriptionId] <> null)
+
     in
-        expanded;
+        filtered;
