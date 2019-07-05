@@ -38,7 +38,7 @@ Perform the following to deploy the custom data connector
 
 Use this option if you do not have Microsoft Visual Studio.
 
-1. Download the latest release available [here](https://github.com/isaiahwilliams/Partner-Center-Query/releases/download/1.1/PartnerCenter-Query.zip)
+1. Download the latest release available [here](https://github.com/isaiahwilliams/Partner-Center-Query/releases/download/1.2/PartnerCenter-Query.zip)
 2. Unblock the zip file and extract the contents
 3. Replace the GUID in the *client_id* with the application identifier
 4. Add the *client_id* file to the *PartnerCetner.zip* archive
